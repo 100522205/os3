@@ -1,2 +1,2 @@
-NIA,Apellidos,Nombre <- Reemplazame (eliminame)
-NIA,Surname,First name <-Replace Me (delete me)
+100522238,Wyrobek Smeder,Leon Jakub
+100522205,Barrio Bielsa,José
