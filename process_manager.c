@@ -17,7 +17,8 @@
  void *consumer(void *arg);
  
  struct thread_args {
-	 int id, belt_size, total;
+	 int id, total;
+	 Queue *q;
  };
  
  void *producer(void *arg) {
@@ -28,15 +29,16 @@
 		 e->num_edition = i;
 		 e->id_belt = args->id;
 		 e->last = (i == args->total - 1);
-		 queue_put(e);
+		 queue_put(args->q, e);
 	 }
 	 pthread_exit(NULL);
  }
  
  void *consumer(void *arg) {
+	 struct thread_args *args = (struct thread_args *)arg;
 	 int done = 0;
 	 while (!done) {
-		 struct element *e = queue_get();
+		 struct element *e = queue_get(args->q);
 		 done = (e->last == 1);
 		 free(e);
 	 }
@@ -51,14 +53,16 @@
  
 	 printf("[OK][process_manager] Process_manager with id %d waiting to produce %d elements.\n", id, items_to_produce);
  
-	 if (queue_init(belt_size) != 0) {
-		 fprintf(stderr, "[ERROR][process_manager] There was an error executing process_manager with id %d.\n", id);
+	 Queue *q = queue_init(belt_size);
+	 if (!q) {
+		 fprintf(stderr, "[ERROR][process_manager] Failed to initialize belt for id %d.\n", id);
 		 return -1;
 	 }
 	 printf("[OK][process_manager] Belt with id %d has been created with a maximum of %d elements.\n", id, belt_size);
  
 	 pthread_t prod, cons;
-	 struct thread_args args = {id, belt_size, items_to_produce};
+	 struct thread_args args = {id, items_to_produce, q};
+ 
 	 pthread_create(&prod, NULL, producer, &args);
 	 pthread_create(&cons, NULL, consumer, &args);
  
@@ -66,6 +70,7 @@
 	 pthread_join(cons, NULL);
  
 	 printf("[OK][process_manager] Process_manager with id %d has produced %d elements.\n", id, items_to_produce);
-	 queue_destroy();
+	 queue_destroy(q);
 	 return 0;
  }
+ 
