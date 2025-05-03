@@ -21,6 +21,12 @@
  
  void *thread_fn(void *arg) {
 	 struct args *a = (struct args *)arg;
+	 if (!a) {
+		fprintf(stderr, "[ERROR][factory_manager] Process_manager with id 0 has finished with errors.\n");
+		fclose(f);
+		return -1;
+	 }
+
 	 int ret = process_manager(a->id, a->belt_size, a->items);
 	 if (ret != 0)
 		 fprintf(stderr, "[ERROR][factory_manager] Process_manager with id %d has finished with errors.\n", a->id);
@@ -39,6 +45,7 @@
 	 FILE *f = fopen(argv[1], "r");
 	 if (!f) {
 		 fprintf(stderr, "[ERROR][factory_manager] Invalid file.\n");
+		 fclose(f);
 		 return -1;
 	 }
  
@@ -51,8 +58,8 @@
 		 return -1;
 	 }
  
-	 while (fscanf(f, "%d %d %d", &id, &size, &items) == 3) {
-		 if (count >= max) {
+	 while (fscanf(f, "%d %d %d", &id, &size, &items) == 3) {		
+		 if (count >= max || items <= 0 || size <= 0 || id < 0) {
 			 fprintf(stderr, "[ERROR][factory_manager] Invalid file.\n");
 			 fclose(f);
 			 return -1;
